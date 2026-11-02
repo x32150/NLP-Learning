@@ -1,0 +1,1 @@
+# Future PyTorch exercises may require torch; no dependencies are needed for the current notes.
