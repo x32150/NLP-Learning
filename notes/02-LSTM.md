@@ -4,7 +4,7 @@ LSTM（Long Short-Term Memory）维护隐藏状态 $h_t$ 和记忆单元 $c_t$�
 
 ![LSTM 沿时间展开](../assets/course-45.png)
 
-*图片来源：《尚硅谷大模型技术之 NLP》课程讲义。橙色水平线表示记忆单元沿时间传递，图中的乘号与加号分别对应逐元素乘法和加法。*
+*图片来源：课程讲义。橙色水平线表示记忆单元沿时间传递，图中的乘号与加号分别对应逐元素乘法和加法。*
 
 $$f_t=\sigma(W_f[h_{t-1};x_t]+b_f)$$
 $$i_t=\sigma(W_i[h_{t-1};x_t]+b_i),\quad \tilde c_t=\tanh(W_c[h_{t-1};x_t]+b_c)$$

@@ -21,7 +21,7 @@ The completed items refer to theoretical study. No complete model-training exper
 
 ## Learning source
 
-The notes are newly generated summaries based on the learner's stated course topics and general NLP concepts. The course is *尚硅谷大模型技术之 NLP*. A local course handout was identified, but its contents have not yet been checked against these notes. The handout and course materials are not redistributed here. Consult the original course for the full instructional material.
+The notes are newly generated summaries based on the learner's stated course topics and general NLP concepts. Selected diagrams are reproduced from a course handout; the complete handout is not redistributed here. Consult the original course for the full instructional material.
 
 ## Updating this portfolio
 

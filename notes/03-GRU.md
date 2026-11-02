@@ -4,7 +4,7 @@ GRU（Gated Recurrent Unit）使用隐藏状态和两个门控制历史信息的
 
 ![GRU 沿时间展开](../assets/course-62.png)
 
-*图片来源：《尚硅谷大模型技术之 NLP》课程讲义。图中每个单元接收当前输入和上一步隐藏状态；两个 sigmoid 门调节状态更新。*
+*图片来源：课程讲义。图中每个单元接收当前输入和上一步隐藏状态；两个 sigmoid 门调节状态更新。*
 
 $$z_t=\sigma(W_zx_t+U_zh_{t-1}+b_z)$$
 $$r_t=\sigma(W_rx_t+U_rh_{t-1}+b_r)$$

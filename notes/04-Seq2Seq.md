@@ -4,7 +4,7 @@ Seq2Seq（Sequence-to-Sequence）把输入序列映射为输出序列，二者�
 
 ![Seq2Seq 编码与解码流程](../assets/course-76.png)
 
-*图片来源：《尚硅谷大模型技术之 NLP》课程讲义。黄色圆形代表从编码器传递到解码器的上下文信息。*
+*图片来源：课程讲义。黄色圆形代表从编码器传递到解码器的上下文信息。*
 
 ```text
 源句 tokens → Encoder → context vector → Decoder → 目标句 tokens
