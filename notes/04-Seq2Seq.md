@@ -1,37 +1,137 @@
-# Seq2Seq：序列到序列
+# NLP Learning Notes — Seq2Seq
 
-Seq2Seq（Sequence-to-Sequence）把输入序列映射为输出序列，二者长度可以不同。机器翻译中，Encoder 读取源句，Decoder 逐步生成目标句。
+- **Topic:** Sequence-to-Sequence Models
+- **Status:** Theory Completed
+- **Next Topic:** Attention Mechanism
 
-![Seq2Seq 编码与解码流程](../assets/course-76.png)
+## 1. Seq2Seq Overview
 
-*图片来源：课程讲义。黄色圆形代表从编码器传递到解码器的上下文信息。*
+Seq2Seq（Sequence to Sequence）是一种将输入序列转换为输出序列的模型框架。输入和输出序列的长度可以不同。主要应用包括机器翻译（Machine Translation）、文本摘要（Text Summarization）、问答系统（Question Answering）和对话系统（Dialogue Systems）。
+
+### Basic Architecture
+
+经典 Seq2Seq 由 Encoder 和 Decoder 组成：
+
+![Seq2Seq 编码与解码结构](../assets/course-76.png)
+
+*图片来源：课程讲义。图中黄色圆形表示传递给 Decoder 的上下文信息。*
+
+- **Encoder（编码器）：**处理输入序列，可以使用 RNN、LSTM 或 GRU，并将信息编码为固定长度的 Context Vector。基本结构通常利用编码器最终隐藏状态表示上下文信息。
+- **Decoder（解码器）：**根据上下文信息逐个预测输出 token，通常从 `<sos>` 开始，到 `<eos>` 结束。
 
 ```text
-源句 tokens → Encoder → context vector → Decoder → 目标句 tokens
-                                      ↑
-                              前一个目标 token
+Input Sequence → Encoder → Context Vector → Decoder → Output Sequence
 ```
 
-在基础 RNN Encoder–Decoder 中，编码器可用最终状态构造上下文向量 $c$：
+在基础 RNN Encoder–Decoder 中，可以用编码器的最终状态构造上下文向量 $c$：
 
-$$h_t=\operatorname{Encoder}(x_t,h_{t-1}),\qquad c=h_T.$$
+$$
+h_t=\operatorname{Encoder}(x_t,h_{t-1}), \qquad c=h_T
+$$
 
-解码器根据上下文、之前的状态和前一个目标 token 计算新状态，再预测当前 token：
+解码器结合上下文、前一状态和前一个目标 token，计算新状态并预测当前 token：
 
-$$s_t=\operatorname{Decoder}(y_{t-1},s_{t-1},c),\qquad P(y_t)=\operatorname{softmax}(W s_t+b).$$
+$$
+s_t=\operatorname{Decoder}(y_{t-1},s_{t-1},c), \qquad P(y_t)=\operatorname{softmax}(Ws_t+b)
+$$
 
-具体模型可以用 $c$ 初始化解码器状态，或将其作为每一步的额外输入。生成通常从起始符开始，遇到结束符停止。训练时可以使用 teacher forcing，即向解码器提供真实的前一个目标 token；推理时则使用已生成的 token。
+具体模型可以用 $c$ 初始化解码器状态，或将其作为每一步的额外输入。
 
-固定长度上下文向量可能成为长句的信息瓶颈；Attention 是后续学习中处理这一问题的重要方法。本笔记只记录基本流程，尚无完整机器翻译训练实验。
+## 2. Special Tokens
 
-## 一个翻译过程
+| Token | Meaning | Function |
+| --- | --- | --- |
+| `<sos>` | Start of Sequence | 告诉 Decoder 开始生成 |
+| `<eos>` | End of Sequence | 表示序列结束 |
 
-以「我喜欢你」→「I like you」为例，编码器先处理中文 token；解码器从 `<BOS>` 开始预测 `I`，再依次根据已有目标词预测 `like`、`you` 和 `<EOS>`。实际结果由模型和解码策略决定，此处只是流程示例。
+例如，目标翻译 `I like you` 添加特殊标记后为：`<sos> I like you <eos>`。
 
-训练时目标序列可以右移构造输入：`<BOS> I like you`；对应预测目标是 `I like you <EOS>`。在 teacher forcing 下，下一步喂入真实的前一个 token；推理时没有真实目标可用，需要使用模型自身生成的 token。这种输入差异可能使推理阶段的错误不断影响后续输出。
+## 3. Teacher Forcing
 
-## 检查理解
+Teacher Forcing（教师强制）是一种训练策略：训练 Decoder 时，下一步输入真实目标序列中的前一个 token，而不是模型上一步的预测结果。
+
+| Step | Decoder Input | Target Output |
+| --- | --- | --- |
+| 1 | `<sos>` | I |
+| 2 | I | like |
+| 3 | like | you |
+| 4 | you | `<eos>` |
+
+即使第一步错误预测为 `You`，第二步仍使用真实答案 `I`。这种策略避免模型预测错误在训练输入中连续累积，有助于稳定训练，并帮助模型学习目标序列的条件概率关系。
+
+## 4. Training vs Inference
+
+### Training（训练）
+
+通常采用 Teacher Forcing：Encoder 编码输入；Decoder 使用真实的前一个 token，预测目标 token 的概率分布；使用交叉熵损失（Cross-Entropy Loss）计算误差，并通过反向传播更新参数。
+
+单个正确 token 的交叉熵损失为：
+
+$$
+L_t = -\log P(y_t)
+$$
+
+### Inference（推理）
+
+采用自回归生成（Autoregressive Generation）：从 `<sos>` 开始预测，将生成的 token 作为下一步输入，直到生成 `<eos>` 或达到最大生成长度。
+
+例如，将「我喜欢你」译成「I like you」时，编码器先处理中文 token；解码器依次生成 `I`、`like`、`you` 和 `<eos>`。实际结果取决于模型和解码策略，此处仅为流程示例。起始和结束标记也常写作 `<BOS>` 和 `<EOS>`。
+
+**核心区别：**训练时通常使用真实目标词；推理时使用模型自己生成的词。
+
+## 5. Decoding Strategies
+
+### 5.1 Greedy Decoding
+
+贪心解码每一步选择当前概率最高的 token。它计算简单、速度快、开销较小，但容易陷入局部最优；当前最优选择不一定形成整体最优序列，生成结果的多样性也有限。
+
+### 5.2 Beam Search
+
+束搜索在每一步保留多个候选序列；`beam_size` 决定保留的候选路径数量。例如，`beam_size=3` 时，每一步保留得分较高的三个候选序列，再继续扩展和筛选。
+
+序列概率可表示为：
+
+$$
+P(y_1,\ldots,y_T\mid x)=\prod_{t=1}^{T}P(y_t\mid y_{<t},x)
+$$
+
+Beam Search 根据候选路径的累计得分选择较优序列，通常使用对数概率计算。它能探索多个候选序列，有机会获得比贪心解码更高得分的完整序列，但计算开销更大，也不保证找到全局最优；更大的 beam size 不一定意味着更好的自然语言质量。
+
+## 6. Limitations of Traditional Seq2Seq
+
+### 6.1 Information Bottleneck
+
+传统 Encoder 将整个输入序列压缩为固定长度的 Context Vector。输入很长时，该向量可能难以充分保留所有重要信息，形成信息瓶颈（Information Bottleneck）。
+
+### 6.2 Lack of Dynamic Attention
+
+传统 Decoder 主要依赖同一个固定上下文向量，但生成不同目标词时可能需要参考源序列的不同位置。例如，生成 `I`、`like`、`apples` 时，分别可能更需要参考「我」「喜欢」「苹果」。固定向量结构缺少显式的动态位置选择机制，可能影响长序列生成质量。
+
+## 7. Introduction to Attention
+
+Attention Mechanism（注意力机制）旨在缓解上述问题：Decoder 在生成每个目标 token 时，根据当前解码状态动态参考 Encoder 各时间步的隐藏状态。它可以选择相关源序列信息，缓解固定上下文向量的信息瓶颈，并帮助建立输入和输出位置之间的对齐关系。
+
+**当前进度：**仅理解 Attention 的设计动机，尚未系统学习注意力评分、Softmax 和加权求和公式。
+
+## 8. Key Takeaways
+
+1. Seq2Seq = Encoder + Decoder：前者提取输入序列信息，后者生成目标序列。
+2. Teacher Forcing 在训练时使用真实的前一个 token；自回归推理使用模型自己生成的前一个 token。
+3. Greedy Decoding 每一步选择当前概率最高的 token；Beam Search 保留多个候选序列并根据累计得分筛选。
+4. 经典 Seq2Seq 存在信息瓶颈和缺乏动态关注的问题；Attention 通过动态参考源序列信息缓解这些问题。
+
+## 9. Learning Progress
+
+- **Completed:** Seq2Seq 基本架构、Encoder 与 Decoder、Context Vector、Teacher Forcing、Autoregressive Generation、Greedy Decoding、Beam Search、Seq2Seq 的主要局限。
+- **In Progress:** Attention Mechanism。
+- **Planned:** Attention Score、Softmax Attention Weights、Weighted Sum、Attention-based Seq2Seq、Transformer Architecture。
+
+## 10. 检查理解
 
 1. 编码器最终状态为什么可以作为一种上下文表示？它是否保证完整保留源句信息？
-2. `<BOS>` 和 `<EOS>` 分别解决什么问题？
-3. 为什么目标句和源句可以长度不同？teacher forcing 与推理的输入有何区别？
+2. 起始符和结束符分别解决什么问题？
+3. 为什么目标句和源句可以长度不同？Teacher Forcing 与推理的输入有何区别？
+
+---
+
+本笔记根据学习内容和个人学习过程整理，用于记录理论理解。目前尚未完成独立的 Seq2Seq 模型训练实验。

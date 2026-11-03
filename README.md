@@ -21,8 +21,7 @@ The completed items refer to theoretical study. No complete model-training exper
 - [RNN](notes/01-RNN.md)
 - [LSTM](notes/02-LSTM.md)
 - [GRU](notes/03-GRU.md)
-- [Seq2Seq overview](notes/04-Seq2Seq.md)
-- [Seq2Seq learning notes](notes/05-Seq2Seq.md)
+- [Seq2Seq](notes/04-Seq2Seq.md)
 
 `implementations/` is reserved for future exercises; `experiments/` for documented, reproducible experiments; and `assets/` for original figures. No implementation or experiment is presented as completed yet.
 
